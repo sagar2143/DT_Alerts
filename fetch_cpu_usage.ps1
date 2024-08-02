@@ -3,7 +3,7 @@
 $url = "https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=(builtin:containers.cpu.usagePercent:filter(and(eq(Container,hybris-storefront))):merge(Container,%22dt.entity.container_group_instance%22):max):limit(100):names:fold(max)&from=-5m&to=now&mzSelector=mzId(-1680102141339355738)"
 
 $curlHeaders = @{
-    "Authorization" = "Api-Token dt0c01.ZPRK2U62OYFD6F7KTXFBDA4K.Y5QZRDBZS7LL4WVE4QSJ5HRYIPHF7CWCPX5MBGXRLD3ZK3OWLLQFHOLYK7A72ARP"
+    "Authorization" = "Api-Token $env:DYNATRACE_API_TOKEN"
     "accept" = "application/json"
 }
 

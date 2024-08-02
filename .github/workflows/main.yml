@@ -2,22 +2,22 @@ name: Scheduled PowerShell Script
 
 on:
   schedule:
+    # Run every 5 minutes
     - cron: '*/5 * * * *'
   workflow_dispatch:  # Enables manual trigger
 
 jobs:
-  run-scripts:
+  run-script:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Print Current Time
-      run: date
-      shell: bash
-
     - name: Run PowerShell Script
       shell: pwsh
       run: |
+        # Set the environment variable from the secret
+        $env:DYNATRACE_API_TOKEN = '${{ secrets.DYNATRACE_API_TOKEN }}'
+        # Use the environment variable in your PowerShell script
         pwsh ./fetch_cpu_usage.ps1
