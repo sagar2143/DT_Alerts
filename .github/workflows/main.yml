@@ -1,0 +1,19 @@
+name: Scheduled PowerShell Script
+
+on:
+  schedule:
+    # Run every 5 minutes
+    - cron: '*/5 * * * *'
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Run PowerShell Script
+      shell: pwsh
+      run: |
+        pwsh ./fetch_cpu_usage.ps1
