@@ -6,7 +6,7 @@ https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=(builtin
 
 # Define the headers for the cURL request
 $curlHeaders = @{
-    "Authorization" = "Api-Token dt0c01.ZPRK2U62OYFD6F7KTXFBDA4K.Y5QZRDBZS7LL4WVE4QSJ5HRYIPHF7CWCPX5MBGXRLD3ZK3OWLLQFHOLYK7A72ARP"
+    "Authorization" = "Api-Token $env:DYNATRACE_API_TOKEN"
     "accept" = "application/json"
 }
 
