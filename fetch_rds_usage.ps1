@@ -1,7 +1,7 @@
 # fetch_rds_usage.ps1
 # Define the URL for the cURL GET request using a here-string
 $url = @"
-https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=(ext:cloud.aws.rds.cpuUtilization:filter(and(or(in("dt.entity.custom_device",entitySelector("type(custom_device),entityName.contains(~"amstack-prod01-eu-prod-~")"))))):splitBy("dt.entity.custom_device"):sort(value(auto,descending))):limit(100):names:fold(max)&from=-5m&to=now&mzSelector=mzId(-1680102141339355738)
+https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=(ext:cloud.aws.rds.cpuUtilization:filter(and(or(in("dt.entity.custom_device",entitySelector("type(custom_device),entityName.contains(~"amstack-prod01-eu-prod-~")"))))):splitBy("dt.entity.custom_device"):sort(value(auto,descending))):limit(100):names:fold(max)&from=-10m&to=now&mzSelector=mzId(-1680102141339355738)
 "@
 
 # Define the headers for the cURL request
