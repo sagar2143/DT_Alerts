@@ -2,9 +2,9 @@ name: Scheduled PowerShell Scripts
 
 on:
   workflow_dispatch:  # Enables manual trigger
-##  schedule:
-    # Run every 5 minutes
-##   - cron: '*/5 * * * *'
+  schedule:
+    # Uncomment to run every 5 minutes
+    # - cron: '*/5 * * * *'
 
 jobs:
   run-scripts:
@@ -14,32 +14,49 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Run fetch_cpu_usage.ps1
-      shell: pwsh
+    - name: Set up PowerShell environment
+      shell: bash
       run: |
-        $env:DYNATRACE_API_TOKEN = '${{ secrets.DYNATRACE_API_TOKEN }}'
-        pwsh ./fetch_cpu_usage.ps1
-
-    - name: Run fetch_DT_usage.ps1
-      shell: pwsh
-      run: |
-        $env:DYNATRACE_API_TOKEN = '${{ secrets.DYNATRACE_API_TOKEN }}'
-        pwsh ./fetch_DT_usage.ps1
+        sudo apt-get update
+        sudo apt-get install -y powershell
+        pwsh -v
 
     - name: Run fetch_rds_usage.ps1
       shell: pwsh
+      env:
+        DYNATRACE_API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
       run: |
-        $env:DYNATRACE_API_TOKEN = '${{ secrets.DYNATRACE_API_TOKEN }}'
-        pwsh ./fetch_rds_usage.ps1
+        Write-Output "Running fetch_rds_usage.ps1..."
+        ./fetch_rds_usage.ps1
+
+    - name: Run fetch_cpu_usage.ps1
+      shell: pwsh
+      env:
+        DYNATRACE_API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
+      run: |
+        Write-Output "Running fetch_cpu_usage.ps1..."
+        ./fetch_cpu_usage.ps1
+
+    - name: Run fetch_DT_usage.ps1
+      shell: pwsh
+      env:
+        DYNATRACE_API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
+      run: |
+        Write-Output "Running fetch_DT_usage.ps1..."
+        ./fetch_DT_usage.ps1
 
     - name: Run fetch_solr_usage.ps1
       shell: pwsh
+      env:
+        DYNATRACE_API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
       run: |
-        $env:DYNATRACE_API_TOKEN = '${{ secrets.DYNATRACE_API_TOKEN }}'
-        pwsh ./fetch_solr_usage.ps1
+        Write-Output "Running fetch_solr_usage.ps1..."
+        ./fetch_solr_usage.ps1
 
     - name: Run fetch_user_usage.ps1
       shell: pwsh
+      env:
+        DYNATRACE_API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
       run: |
-        $env:DYNATRACE_API_TOKEN = '${{ secrets.DYNATRACE_API_TOKEN }}'
-        pwsh ./fetch_user_usage.ps1
+        Write-Output "Running fetch_user_usage.ps1..."
+        ./fetch_user_usage.ps1
