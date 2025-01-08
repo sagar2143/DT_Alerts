@@ -40,7 +40,7 @@ $adaptiveCardMessage = @{
                     },
                     @{
                         "type" = "TextBlock"
-                        "text" = "**Fetching Details from EU PROD RDS(Database) Consumption Stats for Write Instance from the last 5 Minutes.**"
+                        "text" = "**Fetching Details from EU PROD RDS(Database) Consumption Stats for Write Instance from the last 10 Minutes.**"
                         "wrap" = $true
                     },
                     @{
