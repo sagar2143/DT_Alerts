@@ -67,7 +67,7 @@ $adaptiveCardMessage = @{
 $adaptiveCardMessageJson = $adaptiveCardMessage | ConvertTo-Json -Depth 5
 
 # Construct the Teams webhook URL
-$teamsWebhookUrl = "https://prod-136.westus.logic.azure.com:443/workflows/2524323df8414212a93071eee322d1a2/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=UUi1CuPM_oQ0iRCdfxqnnNWvcu7pQ6q9bfykYfE2Mck"
+$teamsWebhookUrl = "https://default38c3fde4197b47b99500769f547df6.98.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/2524323df8414212a93071eee322d1a2/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=8Gn0w5i0gxaXsSSjym6HVeMon0rCwGnhI5qKaZt8gYw"
 
 # Send the Adaptive Card payload to Teams
 Invoke-RestMethod -Uri $teamsWebhookUrl -Method Post -Body $adaptiveCardMessageJson -ContentType "application/json"
