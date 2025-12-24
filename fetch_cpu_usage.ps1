@@ -26,7 +26,7 @@ $values = $response.result[0].data[0].values
 
 if ($values -is [array] -and $values.Count -gt 0) {
     $value = $values[0]
-    $formattedCpuUsage = "{0:N2} %" -f $value
+    $formattedCpuUsage = "{0:N2}%" -f $value
 } else {
     $value = 0
     $formattedCpuUsage = "Data not available"
