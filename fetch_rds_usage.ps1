@@ -1,13 +1,13 @@
 # ============================================================
 # fetch_rds_usage.ps1
-# Clean & Grouped RDS CPU summary for Teams
+# Clean, grouped & colored RDS CPU summary for Teams
 # ============================================================
 
 # -----------------------------
 # CONFIG
 # -----------------------------
 $dtBaseUrl = "https://etq84528.live.dynatrace.com"
-$mzId      = "6099903660333152921"   # <-- apna MZ ID
+$mzId      = "6099903660333152921"   # <-- apna Management Zone ID yahan rakho
 
 $teamsWebhookUrl = "https://default38c3fde4197b47b99500769f547df6.98.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/2524323df8414212a93071eee322d1a2/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=8Gn0w5i0gxaXsSSjym6HVeMon0rCwGnhI5qKaZt8gYw"
 
@@ -20,7 +20,7 @@ $headers = @{
 }
 
 # -----------------------------
-# URLs
+# Metrics URLs
 # -----------------------------
 $urlRds = "$dtBaseUrl/api/v2/metrics/query?metricSelector=builtin:cloud.aws.rds.cpu.usage:splitBy(%22dt.entity.relational_database_service%22):avg:sort(value(avg,descending)):limit(50)&from=-10m&to=now&mzSelector=mzId($mzId)"
 
@@ -35,7 +35,6 @@ function Resolve-DtEntityName($entityId) {
     if ($entityCache.ContainsKey($entityId)) {
         return $entityCache[$entityId]
     }
-
     try {
         $resp = Invoke-RestMethod -Uri "$dtBaseUrl/api/v2/entities/$entityId" -Headers $headers
         $entityCache[$entityId] = $resp.displayName
@@ -65,6 +64,7 @@ function Get-Category($name) {
 function Shorten-Name($name) {
     $name `
         -replace "amstack-prod01-mlpeu-prod-", "" `
+        -replace "^eia-", "" `
         -replace "-db$", " DB"
 }
 
@@ -96,7 +96,7 @@ foreach ($resp in @($responseRds, $responseCustom)) {
 }
 
 # -----------------------------
-# Grouping
+# Group & format
 # -----------------------------
 $write = @()
 $read  = @()
@@ -115,7 +115,7 @@ foreach ($item in ($allReadings | Sort-Object Cpu -Descending)) {
 }
 
 # -----------------------------
-# Build message text
+# Build Teams text (Teams-safe formatting)
 # -----------------------------
 $sections = @()
 
@@ -136,6 +136,7 @@ $cpuText = if ($sections.Count -gt 0) {
 } else {
     "No CPU data available."
 }
+
 # -----------------------------
 # Teams Adaptive Card
 # -----------------------------
