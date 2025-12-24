@@ -60,7 +60,7 @@ $adaptiveCardMessage = @"
         "body": [
           {
             "type": "TextBlock",
-            "text": "⚙️ **EU PROD – SF Nodes CPU Usage**",
+            "text": "⚙️ **EU MLP PROD – SF Nodes CPU Usage**",
             "weight": "bolder",
             "size": "medium",
             "wrap": true
