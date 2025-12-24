@@ -53,10 +53,10 @@ $adaptiveCardMessage = @"
           {
             "type": "TextBlock",
             "text": "$formattedUserCount",
-            "size": "extraLarge",
+            "size": "large",
             "weight": "bolder",
             "color": "good",
-            "horizontalAlignment": "center",
+            "spacing": "small",
             "wrap": true
           },
           {
