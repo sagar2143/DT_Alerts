@@ -103,4 +103,4 @@ Invoke-RestMethod `
   -Uri $teamsWebhookUrl `
   -Method Post `
   -Body $adaptiveCardMessage `
-  -ContentType "applicatio
+  -ContentType "application/json"
