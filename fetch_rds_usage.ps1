@@ -1,14 +1,13 @@
 # ------------------------------------------------------------
 # fetch_rds_usage.ps1
-# Fetch ALL RDS CPU usage (native RDS + custom devices)
-# and post results to Microsoft Teams
+# Fetch ALL RDS CPU usage and post readable output to Teams
 # ------------------------------------------------------------
 
 # -----------------------------
 # Dynatrace URLs
 # -----------------------------
 
-$urlRds = "https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=builtin:cloud.aws.rds.cpu.usage:splitBy(%22dt.entity.relational_database_service%22):avg:sort(value(avg,descending)):limit(50)&from=-10m&to=now&mzSelector=mzId(6099903660333152921)"
+$urlRds = "https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=(builtin:cloud.aws.rds.cpu.usage:filter(and(or(in(%22dt.entity.relational_database_service%22,entitySelector(%22type(relational_database_service),entityName(~%22amstack-prod01-eu-prod-~%22)%22))))):splitBy(%22dt.entity.relational_database_service%22):avg:sort(value(avg,descending)):limit(20)):limit(100):names&from=-10m&to=now&mzSelector=mzId(6099903660333152921)"
 
 $urlCustom = "https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=(ext:cloud.aws.rds.cpuUtilization:filter(and(or(in(%22dt.entity.custom_device%22,entitySelector(%22type(custom_device),entityName(~%22amstack-prod01-m1peu-prod-~%22)%22))))):splitBy(%22dt.entity.custom_device%22):avg:sort(value(avg,descending)):limit(20)):limit(100):names&from=-10m&to=now&mzSelector=mzId(6099903660333152921)"
 
@@ -18,6 +17,29 @@ $urlCustom = "https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSel
 $headers = @{
     "Authorization" = "Api-Token $env:DYNATRACE_API_TOKEN"
     "accept"        = "application/json"
+}
+
+# -----------------------------
+# Helper: Resolve entity ID → display name
+# -----------------------------
+$entityCache = @{}
+
+function Resolve-DtEntityName {
+    param ($entityId)
+
+    if ($entityCache.ContainsKey($entityId)) {
+        return $entityCache[$entityId]
+    }
+
+    try {
+        $url = "https://etq84528.live.dynatrace.com/api/v2/entities/$entityId"
+        $resp = Invoke-RestMethod -Uri $url -Headers $headers
+        $entityCache[$entityId] = $resp.displayName
+        return $resp.displayName
+    } catch {
+        $entityCache[$entityId] = $entityId
+        return $entityId
+    }
 }
 
 # -----------------------------
@@ -37,8 +59,11 @@ if ($responseRds.result.Count -gt 0) {
         if ($series.values) {
             $max = ($series.values | Measure-Object -Maximum).Maximum
             if ($max -ne $null) {
+                $entityId = $series.dimensions[0]
+                $name = Resolve-DtEntityName $entityId
+
                 $allReadings += [PSCustomObject]@{
-                    Name = $series.dimensions[0]
+                    Name = $name
                     Cpu  = [math]::Round($max, 2)
                 }
             }
@@ -52,8 +77,11 @@ if ($responseCustom.result.Count -gt 0) {
         if ($series.values) {
             $max = ($series.values | Measure-Object -Maximum).Maximum
             if ($max -ne $null) {
+                $entityId = $series.dimensions[0]
+                $name = Resolve-DtEntityName $entityId
+
                 $allReadings += [PSCustomObject]@{
-                    Name = $series.dimensions[0]
+                    Name = $name
                     Cpu  = [math]::Round($max, 2)
                 }
             }
@@ -69,7 +97,7 @@ $allReadings = $allReadings | Sort-Object Cpu -Descending
 # -----------------------------
 if ($allReadings.Count -gt 0) {
     $cpuText = ($allReadings | ForEach-Object {
-        "• **$($_.Name)** → $($_.Cpu)%"
+        "• **$($_.Name)** → $($_.Cpu)%  "
     }) -join "`n"
 } else {
     $cpuText = "No CPU data available."
