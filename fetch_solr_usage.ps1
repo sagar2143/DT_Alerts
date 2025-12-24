@@ -64,7 +64,7 @@ $adaptiveCardMessage = @"
           },
           {
             "type": "TextBlock",
-            "text": "Maximum memory usage (last 5 minutes)",
+            "text": "Maximum SOLR Memory Usage (last 5 minutes)",
             "isSubtle": true,
             "wrap": true
           },
@@ -79,7 +79,7 @@ $adaptiveCardMessage = @"
           },
           {
             "type": "TextBlock",
-            "text": "🕒 Data source: Dynatrace | Scope: EU PROD",
+            "text": "🕒 Data source: Dynatrace | Scope: EU MLP PROD",
             "isSubtle": true,
             "spacing": "medium",
             "wrap": true
