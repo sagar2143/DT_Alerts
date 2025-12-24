@@ -10,7 +10,7 @@
 
 $urlRds = "https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=builtin:cloud.aws.rds.cpu.usage:splitBy(%22dt.entity.relational_database_service%22):avg:sort(value(avg,descending)):limit(50)&from=-10m&to=now&mzSelector=mzId(6099903660333152921)"
 
-$urlCustom ="https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=ext:cloud.aws.rds.cpuUtilization:filter(in(%22dt.entity.custom_device%22,entitySelector(%22type(custom_device),entityName.contains(%27amstack-prod01-m1peu-prod-%27)%22))):splitBy(%22dt.entity.custom_device%22):avg:sort(value(avg,descending)):limit(50)&from=-10m&to=now&mzSelector=mzId(6099903660333152921)"
+$urlCustom = "https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=(ext:cloud.aws.rds.cpuUtilization:filter(and(or(in(%22dt.entity.custom_device%22,entitySelector(%22type(custom_device),entityName(~%22amstack-prod01-m1peu-prod-~%22)%22))))):splitBy(%22dt.entity.custom_device%22):avg:sort(value(avg,descending)):limit(20)):limit(100):names&from=-10m&to=now&mzSelector=mzId(xyz)"
 
 # -----------------------------
 # Headers
