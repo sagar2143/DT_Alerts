@@ -116,7 +116,7 @@ $adaptiveCardMessage = @"
 # -----------------------------
 # Teams Webhook
 # -----------------------------
-$teamsWebhookUrl = "https://default38c3fde4197b47b99500769f547df6.98.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/XXXXXXXX/triggers/manual/paths/invoke"
+$teamsWebhookUrl = "https://default38c3fde4197b47b99500769f547df6.98.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/e8ceeb408a724650bd06a9c843d893be/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=7iZGnBXee4J8UmLNfvaE9I4BcWc6LIajZTOx909AVMY"
 
 Invoke-RestMethod `
   -Uri $teamsWebhookUrl `
