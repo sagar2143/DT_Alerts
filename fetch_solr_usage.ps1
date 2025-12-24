@@ -27,7 +27,7 @@ $response = Invoke-RestMethod -Uri $url -Headers $curlHeaders
 $values = $response.result[0].data[0].values
 $maximumMemoryUsage = $values | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
 
-$formattedMemoryUsage = "{0:N2} %" -f $maximumMemoryUsage
+$formattedMemoryUsage = "{0:N2}%" -f $maximumMemoryUsage
 
 # -----------------------------
 # Threshold-based color
