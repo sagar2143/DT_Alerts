@@ -60,3 +60,11 @@ jobs:
       run: |
         Write-Output "Running fetch_user_usage.ps1..."
         ./fetch_user_usage.ps1
+
+    - name: Run fetch_apdex_usage.ps1
+      shell: pwsh
+      env:
+        DYNATRACE_API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
+      run: |
+        Write-Output "Running fetch_apdex_usage.ps1..."
+        ./fetch_apdex_usage.ps1
