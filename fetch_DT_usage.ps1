@@ -55,14 +55,14 @@ $adaptiveCardMessage = @"
         "body": [
           {
             "type": "TextBlock",
-            "text": "🧠 **EU PROD – Storefront Memory Usage**",
+            "text": "🧠 **EU MLP PROD – Storefront Memory Usage**",
             "weight": "bolder",
             "size": "medium",
             "wrap": true
           },
           {
             "type": "TextBlock",
-            "text": "Maximum memory usage (last 5 minutes)",
+            "text": "Maximum Memory usage (last 5 minutes)",
             "isSubtle": true,
             "wrap": true
           },
