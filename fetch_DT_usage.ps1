@@ -69,7 +69,7 @@ $adaptiveCardMessage = @"
           {
             "type": "TextBlock",
             "text": "$formattedMemoryUsage",
-            "size": "large",
+            "size": "extraLarge",
             "weight": "bolder",
             "color": "$color",
             "spacing": "small",
@@ -77,7 +77,7 @@ $adaptiveCardMessage = @"
           },
           {
             "type": "TextBlock",
-            "text": "🕒 Data source: Dynatrace | Scope: EU PROD",
+            "text": "🕒 Data source: Dynatrace | Scope: EU MLP PROD",
             "isSubtle": true,
             "spacing": "medium",
             "wrap": true
