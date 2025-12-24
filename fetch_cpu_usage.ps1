@@ -1,6 +1,6 @@
 # fetch_cpu_usage.ps1
 
-$url = "https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=(builtin:containers.cpu.usagePercent:filter(and(eq(Container,hybris-storefront))):merge(Container,%22dt.entity.container_group_instance%22):max):limit(100):names:fold(max)&from=-5m&to=now&mzSelector=mzId(-1680102141339355738)"
+$url = "https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=(builtin:containers.cpu.usagePercent:filter(and(eq(Container,hybris-storefront))):merge(Container,%22dt.entity.container_group_instance%22):max):limit(100):names:fold(max)&from=-5m&to=now&mzSelector=mzId(6099903660333152921)"
 
 $curlHeaders = @{
     "Authorization" = "Api-Token $env:DYNATRACE_API_TOKEN"
