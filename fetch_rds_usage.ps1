@@ -1,15 +1,15 @@
-# ------------------------------------------------------------
+# ============================================================
 # fetch_rds_usage.ps1
-# Fetch ALL RDS CPU usage and post readable output to Teams
-# ------------------------------------------------------------
+# Clean & Grouped RDS CPU summary for Teams
+# ============================================================
 
 # -----------------------------
-# Dynatrace URLs
+# CONFIG
 # -----------------------------
+$dtBaseUrl = "https://etq84528.live.dynatrace.com"
+$mzId      = "6099903660333152921"   # <-- apna MZ ID
 
-$urlRds = "https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=builtin:cloud.aws.rds.cpu.usage:splitBy(%22dt.entity.relational_database_service%22):avg:sort(value(avg,descending)):limit(50)&from=-10m&to=now&mzSelector=mzId(6099903660333152921)"
-
-$urlCustom = "https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=ext:cloud.aws.rds.cpuUtilization:splitBy(%22dt.entity.custom_device%22):avg:sort(value(avg,descending)):limit(50)&from=-10m&to=now&mzSelector=mzId(6099903660333152921)"
+$teamsWebhookUrl = "https://default38c3fde4197b47b99500769f547df6.98.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/2524323df8414212a93071eee322d1a2/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=8Gn0w5i0gxaXsSSjym6HVeMon0rCwGnhI5qKaZt8gYw"
 
 # -----------------------------
 # Headers
@@ -20,112 +20,144 @@ $headers = @{
 }
 
 # -----------------------------
-# Helper: Resolve entity ID → display name
+# URLs
+# -----------------------------
+$urlRds = "$dtBaseUrl/api/v2/metrics/query?metricSelector=builtin:cloud.aws.rds.cpu.usage:splitBy(%22dt.entity.relational_database_service%22):avg:sort(value(avg,descending)):limit(50)&from=-10m&to=now&mzSelector=mzId($mzId)"
+
+$urlCustom = "$dtBaseUrl/api/v2/metrics/query?metricSelector=ext:cloud.aws.rds.cpuUtilization:splitBy(%22dt.entity.custom_device%22):avg:sort(value(avg,descending)):limit(50)&from=-10m&to=now&mzSelector=mzId($mzId)"
+
+# -----------------------------
+# Entity cache + resolver
 # -----------------------------
 $entityCache = @{}
 
-function Resolve-DtEntityName {
-    param ($entityId)
-
+function Resolve-DtEntityName($entityId) {
     if ($entityCache.ContainsKey($entityId)) {
         return $entityCache[$entityId]
     }
 
     try {
-        $url = "https://etq84528.live.dynatrace.com/api/v2/entities/$entityId"
-        $resp = Invoke-RestMethod -Uri $url -Headers $headers
+        $resp = Invoke-RestMethod -Uri "$dtBaseUrl/api/v2/entities/$entityId" -Headers $headers
         $entityCache[$entityId] = $resp.displayName
         return $resp.displayName
     } catch {
-        $entityCache[$entityId] = $entityId
         return $entityId
     }
 }
 
 # -----------------------------
-# Call Dynatrace
+# Helpers
+# -----------------------------
+function Get-CpuEmoji($cpu) {
+    if ($cpu -ge 80) { "🔴" }
+    elseif ($cpu -ge 60) { "🟡" }
+    else { "🟢" }
+}
+
+function Get-Category($name) {
+    $n = $name.ToLower()
+    if ($n -match "wr|writer|primary") { "WRITE" }
+    elseif ($n -match "rd|reader|replica") { "READ" }
+    elseif ($n -match "-db") { "DB" }
+    else { "OTHER" }
+}
+
+function Shorten-Name($name) {
+    $name `
+        -replace "amstack-prod01-mlpeu-prod-", "" `
+        -replace "-db$", " DB"
+}
+
+# -----------------------------
+# Fetch data
 # -----------------------------
 $responseRds    = Invoke-RestMethod -Uri $urlRds    -Headers $headers
 $responseCustom = Invoke-RestMethod -Uri $urlCustom -Headers $headers
 
-# -----------------------------
-# Collect all readings
-# -----------------------------
 $allReadings = @()
 
-# ---- Native RDS ----
-if ($responseRds.result.Count -gt 0) {
-    foreach ($series in $responseRds.result[0].data) {
-        if ($series.values) {
-            $max = ($series.values | Measure-Object -Maximum).Maximum
-            if ($max -ne $null) {
-                $entityId = $series.dimensions[0]
-                $name = Resolve-DtEntityName $entityId
+foreach ($resp in @($responseRds, $responseCustom)) {
+    if ($resp.result.Count -gt 0) {
+        foreach ($series in $resp.result[0].data) {
+            if ($series.values) {
+                $max = ($series.values | Measure-Object -Maximum).Maximum
+                if ($max -ne $null) {
+                    $entityId = $series.dimensions[0]
+                    $name = Resolve-DtEntityName $entityId
 
-                $allReadings += [PSCustomObject]@{
-                    Name = $name
-                    Cpu  = [math]::Round($max, 2)
+                    $allReadings += [PSCustomObject]@{
+                        Name = $name
+                        Cpu  = [math]::Round($max, 2)
+                    }
                 }
             }
         }
     }
 }
 
-# ---- Custom Devices ----
-if ($responseCustom.result.Count -gt 0) {
-    foreach ($series in $responseCustom.result[0].data) {
-        if ($series.values) {
-            $max = ($series.values | Measure-Object -Maximum).Maximum
-            if ($max -ne $null) {
-                $entityId = $series.dimensions[0]
-                $name = Resolve-DtEntityName $entityId
+# -----------------------------
+# Grouping
+# -----------------------------
+$write = @()
+$read  = @()
+$dbs   = @()
 
-                $allReadings += [PSCustomObject]@{
-                    Name = $name
-                    Cpu  = [math]::Round($max, 2)
-                }
-            }
-        }
+foreach ($item in ($allReadings | Sort-Object Cpu -Descending)) {
+    $emoji = Get-CpuEmoji $item.Cpu
+    $short = Shorten-Name $item.Name
+    $line  = "• $emoji $short → $($item.Cpu)%"
+
+    switch (Get-Category $item.Name) {
+        "WRITE" { $write += $line }
+        "READ"  { $read  += $line }
+        "DB"    { $dbs   += $line }
     }
 }
 
-# Sort descending CPU
-$allReadings = $allReadings | Sort-Object Cpu -Descending
+# -----------------------------
+# Build message text
+# -----------------------------
+$sections = @()
 
-# -----------------------------
-# Build Teams message text
-# -----------------------------
-if ($allReadings.Count -gt 0) {
-    $cpuText = ($allReadings | ForEach-Object {
-        "• **$($_.Name)** → $($_.Cpu)%  "
-    }) -join "`n"
+if ($write.Count -gt 0) {
+    $sections += "🧠 **General Write CPU**`n" + ($write -join "`n")
+}
+if ($read.Count -gt 0) {
+    $sections += "📊 **General Read CPU**`n" + ($read -join "`n")
+}
+if ($dbs.Count -gt 0) {
+    $sections += "🗄️ **Application Databases**`n" + ($dbs -join "`n")
+}
+
+$cpuText = if ($sections.Count -gt 0) {
+    $sections -join "`n`n"
 } else {
-    $cpuText = "No CPU data available."
+    "No CPU data available."
 }
 
 # -----------------------------
-# Adaptive Card payload
+# Teams Adaptive Card
 # -----------------------------
-$adaptiveCard = @{
-    "type" = "message"
-    "attachments" = @(
+$payload = @{
+    type = "message"
+    attachments = @(
         @{
-            "contentType" = "application/vnd.microsoft.card.adaptive"
-            "content" = @{
-                "type" = "AdaptiveCard"
-                "version" = "1.0"
-                "body" = @(
+            contentType = "application/vnd.microsoft.card.adaptive"
+            content = @{
+                type = "AdaptiveCard"
+                version = "1.0"
+                body = @(
                     @{
-                        "type" = "TextBlock"
-                        "text" = "**EU PROD RDS CPU Usage (Last 10 Minutes)**"
-                        "wrap" = $true
-                        "weight" = "bolder"
-                        "size" = "medium"
+                        type = "TextBlock"
+                        text = "**EU PROD RDS CPU Usage (Last 10 Minutes)**"
+                        weight = "bolder"
+                        size = "medium"
+                        wrap = $true
                     },
                     @{
-                        "type" = "TextBlock"
-                        "text" = $cpuText
-                        "wrap" = $true
+                        type = "TextBlock"
+                        text = $cpuText
+                        wrap = $true
                     }
                 )
             }
@@ -133,15 +165,8 @@ $adaptiveCard = @{
     )
 }
 
-$adaptiveCardJson = $adaptiveCard | ConvertTo-Json -Depth 6
-
-# -----------------------------
-# Teams Webhook
-# -----------------------------
-$teamsWebhookUrl = "https://default38c3fde4197b47b99500769f547df6.98.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/2524323df8414212a93071eee322d1a2/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=8Gn0w5i0gxaXsSSjym6HVeMon0rCwGnhI5qKaZt8gYw"
-
 Invoke-RestMethod `
     -Uri $teamsWebhookUrl `
     -Method Post `
-    -Body $adaptiveCardJson `
+    -Body ($payload | ConvertTo-Json -Depth 6) `
     -ContentType "application/json"
