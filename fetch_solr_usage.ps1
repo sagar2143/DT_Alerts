@@ -57,7 +57,7 @@ $adaptiveCardMessage = @"
         "body": [
           {
             "type": "TextBlock",
-            "text": "🧩 **EU PROD – Solr Memory Usage**",
+            "text": "🧩 **EU MLP PROD – Solr Memory Usage**",
             "weight": "bolder",
             "size": "medium",
             "wrap": true
