@@ -120,21 +120,22 @@ foreach ($item in ($allReadings | Sort-Object Cpu -Descending)) {
 $sections = @()
 
 if ($write.Count -gt 0) {
-    $sections += "🧠 **General Write CPU**`n" + ($write -join "`n")
+    $sections += "🧠 **General Write CPU**  `n" + ($write -join "  `n")
 }
+
 if ($read.Count -gt 0) {
-    $sections += "📊 **General Read CPU**`n" + ($read -join "`n")
+    $sections += "📊 **General Read CPU**  `n" + ($read -join "  `n")
 }
+
 if ($dbs.Count -gt 0) {
-    $sections += "🗄️ **Application Databases**`n" + ($dbs -join "`n")
+    $sections += "🗄️ **Application Databases**  `n" + ($dbs -join "  `n")
 }
 
 $cpuText = if ($sections.Count -gt 0) {
-    $sections -join "`n`n"
+    $sections -join "  `n`n"
 } else {
     "No CPU data available."
 }
-
 # -----------------------------
 # Teams Adaptive Card
 # -----------------------------
