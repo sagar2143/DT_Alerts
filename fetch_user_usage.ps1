@@ -5,7 +5,7 @@ $toDate = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 
 # Define the URL for the cURL GET request using a here-string with the modified "from" and "to" parameters
 $url = @"
-https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=(builtin:apps.web.activeUsersEst:filter(and(eq("User%20type","Real%20users"))):merge("dt.entity.application"):merge("User%20type"):merge(Users):sum:auto:sort(value(sum,descending))):limit(100):names:fold(max)&from=$fromDate&to=$toDate&resolution=1h&mzSelector=mzId(-6099903660333152921)
+https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=(builtin:apps.web.activeUsersEst:filter(and(eq("User%20type","Real%20users"))):merge("dt.entity.application"):merge("User%20type"):merge(Users):sum:auto:sort(value(sum,descending))):limit(100):names:fold(max)&from=$fromDate&to=$toDate&resolution=1h&mzSelector=mzId(6099903660333152921)
 "@
 
 # Define the headers for the cURL request
