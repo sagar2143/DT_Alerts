@@ -1,26 +1,50 @@
 # fetch_Solr_usage.ps1
-# Define the URL for the cURL GET request
+# Fetch maximum Solr memory usage and post clean summary to Teams
+
+# -----------------------------
+# Dynatrace Metrics API URL
+# -----------------------------
 $url = @"
 https://etq84528.live.dynatrace.com/api/v2/metrics/query?metricSelector=(builtin:containers.memory.usagePercent:filter(and(eq(Container,solr))):splitBy(Container,"dt.entity.container_group_instance"):avg:auto:sort(value(avg,descending))):limit(100):names:fold(max)&from=-5m&to=now&mzSelector=mzId(6099903660333152921)
 "@
 
-# Define the headers for the cURL request
+# -----------------------------
+# Headers
+# -----------------------------
 $curlHeaders = @{
     "Authorization" = "Api-Token $env:DYNATRACE_API_TOKEN"
-    "accept" = "application/json"
+    "accept"        = "application/json"
 }
 
-# Perform the cURL GET request and capture the response
+# -----------------------------
+# Call Dynatrace
+# -----------------------------
 $response = Invoke-RestMethod -Uri $url -Headers $curlHeaders
 
-# Extract the "values" from the response
+# -----------------------------
+# Calculate max memory usage
+# -----------------------------
 $values = $response.result[0].data[0].values
 $maximumMemoryUsage = $values | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
 
-# Format the memory usage value with two decimal places and percentage symbol
-$formattedMemoryUsage = "{0:N2}%" -f $maximumMemoryUsage
+$formattedMemoryUsage = "{0:N2} %" -f $maximumMemoryUsage
 
-# Construct the Teams message in adaptive card format
+# -----------------------------
+# Threshold-based color
+# -----------------------------
+if ($maximumMemoryUsage -ge 80) {
+    $color = "attention"   # red
+}
+elseif ($maximumMemoryUsage -ge 60) {
+    $color = "warning"     # yellow
+}
+else {
+    $color = "good"        # green
+}
+
+# -----------------------------
+# Sexy Teams Adaptive Card 😎
+# -----------------------------
 $adaptiveCardMessage = @"
 {
   "type": "message",
@@ -33,27 +57,32 @@ $adaptiveCardMessage = @"
         "body": [
           {
             "type": "TextBlock",
-            "text": "**Initiating commands...**",
+            "text": "🧩 **EU PROD – Solr Memory Usage**",
+            "weight": "bolder",
+            "size": "medium",
             "wrap": true
           },
           {
             "type": "TextBlock",
-            "text": "**Fetching Details from EU PROD Solr Memory Consumption Stats for the last 5 Minutes.**",
+            "text": "Maximum memory usage (last 5 minutes)",
+            "isSubtle": true,
             "wrap": true
-          },
-          {
-            "type": "TextBlock",
-            "text": "**The Current Maximum Solr Memory Usage is:**",
-            "wrap": true,
-            "weight": "bolder"
           },
           {
             "type": "TextBlock",
             "text": "$formattedMemoryUsage",
-            "wrap": true,
             "size": "extraLarge",
             "weight": "bolder",
-            "color": "warning"
+            "color": "$color",
+            "spacing": "small",
+            "wrap": true
+          },
+          {
+            "type": "TextBlock",
+            "text": "🕒 Data source: Dynatrace | Scope: EU PROD",
+            "isSubtle": true,
+            "spacing": "medium",
+            "wrap": true
           }
         ]
       }
@@ -62,8 +91,14 @@ $adaptiveCardMessage = @"
 }
 "@
 
-# Construct the Teams webhook URL
+# -----------------------------
+# Teams Webhook
+# -----------------------------
 $teamsWebhookUrl = "https://default38c3fde4197b47b99500769f547df6.98.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/b233480aed58450382e1b6dadea48950/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=-TEYabjx2CIgo03jCIAZGWozAb3sWJ4u6UysOIlRbIc"
 
-# Send the Adaptive Card payload to Teams
-Invoke-RestMethod -Uri $teamsWebhookUrl -Method Post -Body $adaptiveCardMessage -ContentType "application/json"
+# Send to Teams
+Invoke-RestMethod `
+  -Uri $teamsWebhookUrl `
+  -Method Post `
+  -Body $adaptiveCardMessage `
+  -ContentType "application/json"
