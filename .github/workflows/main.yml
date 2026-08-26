@@ -16,11 +16,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Verify PowerShell
-        shell: pwsh
-        run: |
-          $PSVersionTable
-
       - name: Run PowerShell Scripts
         shell: pwsh
         run: |
@@ -46,6 +41,10 @@ jobs:
             }
 
             & "./$script"
+
+            if (-not $?) {
+              throw "$script failed."
+            }
 
             Write-Host "✅ $script completed successfully."
           }
